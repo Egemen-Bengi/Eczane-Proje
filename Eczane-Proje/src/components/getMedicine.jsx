@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from "react";
+import BengiEczane from "./BengiEczane";
 
 const API_URL = "https://v1.nocodeapi.com/bengi/google_sheets/CNbzVtWjswSphVic";
 
@@ -36,7 +37,7 @@ const GetMedicine = () => {
         fetchData();
     }, []);
 
-    // return <BengiEczane medicines={medicines} />;
+    return <BengiEczane medicinesData={medicines}></BengiEczane>
 };
 
 export default GetMedicine;
