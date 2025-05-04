@@ -1,25 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Input, Form, Breadcrumb, Layout, Menu, theme } from 'antd';
-import { LaptopOutlined, NotificationOutlined, UserOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Input, Form, Layout, theme, Image  } from 'antd';
 import './Eczane.css';
+import logo from '../assets/logo.png';
 
 const BengiEczane = ({ medicinesData }) => {
     const [medicines, setMedicines] = useState([]);
     const [cart, setCart] = useState([]);
-    const [newMedicine, setNewMedicine] = useState({ name: '', category: '', price: '', stock: '' });
+    const [newMedicine, setNewMedicine] = useState({ ilaçAdı: '', ilaçTürü: '', fiyatı: '', stokBilgisi: '' });
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const { Search } = Input;
     const {
       } = theme.useToken();
-      const { Content, Footer, Sider } = Layout;
-      const items2 = [UserOutlined, LaptopOutlined, NotificationOutlined].map((icon, index) => {
-        const key = String(index + 1);
-        return {
-          key: `sub${key}`,
-          icon: React.createElement(icon),
-          label: `subnav ${key}`,
-        };
-      });
-
+    const { Content, Footer, Sider } = Layout;
     useEffect(() => {
         if (medicinesData && medicinesData.length > 0) {
             setMedicines(medicinesData);
@@ -53,7 +45,7 @@ const BengiEczane = ({ medicinesData }) => {
 
         //POST();
         setMedicines([...medicines, newMedicine]);
-        setNewMedicine({name: '', category: '', price: '', stock: ''});
+        setNewMedicine({ilaçAdı: '', ilaçTürü: '', fiyatı: '', stokBilgisi: ''});
         setIsModalVisible(false);
     };
 
@@ -77,6 +69,13 @@ const BengiEczane = ({ medicinesData }) => {
         } else {
             setCart([ ...cart, selectedMedicine])
         }
+    }
+
+    const onSearch = (value) => {
+        const filteredMedicines = medicines.filter(medicine => 
+            medicine.ilaçAdı.toLowerCase().includes(value.toLowerCase())
+        );
+        console.log(filteredMedicines);
     }
 
     const columns = [
@@ -126,13 +125,17 @@ const BengiEczane = ({ medicinesData }) => {
                 <div style={{ padding: '0 48px' }}>
                     <Layout>
                     <Sider>
-                        <Menu
-                        mode="inline"
-                        defaultSelectedKeys={['1']}
-                        defaultOpenKeys={['sub1']}
-                        style={{ height: '100%' }}
-                        items={items2}
+                        <Image
+                            width={100}
+                            src={logo}
+                            alt='logo'
                         />
+                        <div style={{ padding: '16px', textAlign: 'center' }}>
+                            <Button type="primary" onClick={showModal} style={{ width: '100%', marginBottom: '16px' }}>
+                                Yeni İlaç Ekle
+                            </Button>
+                            <Search placeholder="ilaç adı girin" onSearch={onSearch} enterButton />
+                        </div>
                     </Sider>
                     <Content>
                         <Table columns={columns} dataSource={medicines} rowKey="row_id" />
@@ -143,12 +146,6 @@ const BengiEczane = ({ medicinesData }) => {
                     Ant Design ©{new Date().getFullYear()} Created by Ant UED
                 </Footer>
             </Layout>
-            {/*
-            <Button type="primary" onClick={showModal} style={{ marginBottom: '16px' }}>
-                Yeni İlaç Ekle
-            </Button>
-
-            <Table columns={columns} dataSource={medicines} rowKey="row_id" />
 
             <Modal
                 title="Yeni İlaç Ekle"
@@ -195,7 +192,6 @@ const BengiEczane = ({ medicinesData }) => {
                     </Form.Item>
                 </Form>
             </Modal>
-             */}
         </div>
     );
 };
