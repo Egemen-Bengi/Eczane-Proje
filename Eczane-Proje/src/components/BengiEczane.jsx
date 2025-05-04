@@ -1,11 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Input, Form } from 'antd';
+import { Table, Button, Modal, Input, Form, Breadcrumb, Layout, Menu, theme } from 'antd';
+import { LaptopOutlined, NotificationOutlined, UserOutlined } from '@ant-design/icons';
+import './Eczane.css';
 
 const BengiEczane = ({ medicinesData }) => {
     const [medicines, setMedicines] = useState([]);
     const [cart, setCart] = useState([]);
     const [newMedicine, setNewMedicine] = useState({ name: '', category: '', price: '', stock: '' });
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const {
+      } = theme.useToken();
+      const { Content, Footer, Sider } = Layout;
+      const items2 = [UserOutlined, LaptopOutlined, NotificationOutlined].map((icon, index) => {
+        const key = String(index + 1);
+        return {
+          key: `sub${key}`,
+          icon: React.createElement(icon),
+          label: `subnav ${key}`,
+        };
+      });
 
     useEffect(() => {
         if (medicinesData && medicinesData.length > 0) {
@@ -25,7 +38,7 @@ const BengiEczane = ({ medicinesData }) => {
                 method: "post",
                 headers: myHeaders,
                 redirect: "follow",
-                body: JSON.stringify([[newMedicine.name, newMedicine.category, newMedicine.price, newMedicine.stock]])
+                body: JSON.stringify([[newMedicine.ilaçAdı, newMedicine.ilaçTürü, newMedicine.fiyatı, newMedicine.stokBilgisi]]),
             };
 
             fetch("https://v1.nocodeapi.com/bengi/google_sheets/CNbzVtWjswSphVic?tabId=Sayfa1", requestOptions)
@@ -51,7 +64,7 @@ const BengiEczane = ({ medicinesData }) => {
     const handleNewMedicineInputChange = (event) => {
         const { name, value } = event.target;
 
-        if ((name === 'price' || name === 'stock') && value < 0) {
+        if ((name === 'fiyatı' || name === 'stokBilgisi') && value < 0) {
             return;
         }
 
@@ -108,6 +121,29 @@ const BengiEczane = ({ medicinesData }) => {
 
     return (
         <div>
+            
+            <Layout>
+                <div style={{ padding: '0 48px' }}>
+                    <Layout>
+                    <Sider>
+                        <Menu
+                        mode="inline"
+                        defaultSelectedKeys={['1']}
+                        defaultOpenKeys={['sub1']}
+                        style={{ height: '100%' }}
+                        items={items2}
+                        />
+                    </Sider>
+                    <Content>
+                        <Table columns={columns} dataSource={medicines} rowKey="row_id" />
+                    </Content>
+                    </Layout>
+                </div>
+                <Footer>
+                    Ant Design ©{new Date().getFullYear()} Created by Ant UED
+                </Footer>
+            </Layout>
+            {/*
             <Button type="primary" onClick={showModal} style={{ marginBottom: '16px' }}>
                 Yeni İlaç Ekle
             </Button>
@@ -125,24 +161,24 @@ const BengiEczane = ({ medicinesData }) => {
                 <Form layout="vertical">
                     <Form.Item label="İlaç Adı">
                         <Input
-                            name="name"
-                            value={newMedicine.name}
+                            name="ilaçAdı"
+                            value={newMedicine.ilaçAdı}
                             onChange={handleNewMedicineInputChange}
                             placeholder="İlaç adını girin ör: Vermidon"
                         />
                     </Form.Item>
                     <Form.Item label="Kategori">
                         <Input
-                            name="category"
-                            value={newMedicine.category}
+                            name="ilaçTürü"
+                            value={newMedicine.ilaçTürü}
                             onChange={handleNewMedicineInputChange}
                             placeholder="Kategori girin ör: Ağrı Kesici"
                         />
                     </Form.Item>
                     <Form.Item label="Fiyat">
                         <Input
-                            name="price"
-                            value={newMedicine.price}
+                            name="fiyatı"
+                            value={newMedicine.fiyatı}
                             onChange={handleNewMedicineInputChange}
                             placeholder="Fiyat girin ör: 10"
                             type="number"
@@ -150,8 +186,8 @@ const BengiEczane = ({ medicinesData }) => {
                     </Form.Item>
                     <Form.Item label="Miktar">
                         <Input
-                            name="stock"
-                            value={newMedicine.stock}
+                            name="stokBilgisi"
+                            value={newMedicine.stokBilgisi}
                             onChange={handleNewMedicineInputChange}
                             placeholder="Miktarı girin ör: 100"
                             type="number"
@@ -159,6 +195,7 @@ const BengiEczane = ({ medicinesData }) => {
                     </Form.Item>
                 </Form>
             </Modal>
+             */}
         </div>
     );
 };

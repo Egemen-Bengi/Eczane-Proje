@@ -1,0 +1,42 @@
+html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center; /* Yatayda ortalama */
+    align-items: center; /* Dikeyde ortalama */
+    background: #fff; /* Tüm arka planı beyaz yapar */
+}
+
+.ant-layout {
+    min-width: 170vh; /* Layout'un tüm ekranı kaplamasını sağlar */
+    display: flex;
+    min-height: 90vh;
+    background: #fff; /* Layout'un arka planını beyaz yapar */
+}
+
+.ant-layout-content {
+    width: 100%;
+    margin: 0 auto;
+    padding: 24px;
+    background: #fff; /* İçerik alanı için beyaz arka plan */
+    border-radius: 8px; /* Köşeleri yuvarlatır */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Hafif gölge efekti */
+    flex-grow: 1;
+}
+
+.ant-table-wrapper {
+    overflow-x: auto; /* Tablo genişliği taşarsa yatay kaydırma ekler */
+}
+
+.ant-layout-sider {
+    border-radius: 8px; /* Köşeleri yuvarlatır */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Hafif gölge efekti */
+    background: #fff; /* Sider için beyaz arka plan */
+}
+
+.ant-layout-footer {
+    text-align: center;
+    background: #fff; /* Footer için beyaz arka plan */
+    border-top: 1px solid #e8e8e8; /* Üst çizgi */
+}
