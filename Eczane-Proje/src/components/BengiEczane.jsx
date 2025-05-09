@@ -1,17 +1,43 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Input, Form, Layout, theme, Image  } from 'antd';
+import { Table, Button, Input, Layout, theme, Image, notification  } from 'antd';
 import './Eczane.css';
 import logo from '../assets/logo.png';
+import MedicineModal from './NewMedicineModal';
+import CustomerMailAddress from './CustomerMailAddress';
 
 const BengiEczane = ({ medicinesData }) => {
     const [medicines, setMedicines] = useState([]);
+    const [customerMail, setCustomerMail] = useState('');
     const [cart, setCart] = useState([]);
     const [newMedicine, setNewMedicine] = useState({ ilaçAdı: '', ilaçTürü: '', fiyatı: '', stokBilgisi: '' });
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isCustomerModalVisible, setIsCustomerModalVisible] = useState(false);
     const { Search } = Input;
     const {
       } = theme.useToken();
     const { Content, Footer, Sider } = Layout;
+    const [mail, mailContextHolder] = notification.useNotification(); 
+    const [empty, emptyContextHolder] = notification.useNotification(); 
+    const [existing, existingContextHolder] = notification.useNotification();
+    const openMailNotification = (placement) => {
+        mail.info({
+            description: `alınan ilaçlar: ${cart.map(medicine => medicine.ilaçAdı).join(', ')}\n ${customerMail.mailAdresi} adresine mail olarak atıldı`,
+            placement,
+        });
+    };
+    const openEmptyNotification = (placement) => {
+        empty.info({
+            description: "Sepetinizde hiç ilaç yok.",
+            placement,
+        });
+    }
+    const openExistingNotification = (placement) => {
+        existing.info({
+            description: "Bu ilaç zaten sepetinizde mevcut.",
+            placement,
+        });
+    }
+
     useEffect(() => {
         if (medicinesData && medicinesData.length > 0) {
             setMedicines(medicinesData);
@@ -21,6 +47,10 @@ const BengiEczane = ({ medicinesData }) => {
     const showModal = () => {
         setIsModalVisible(true);
     };
+
+    const showModalMail = () => {
+        setIsCustomerModalVisible(true)
+    }
 
     const handleOk = async () => {
         const POST = () => {
@@ -63,19 +93,53 @@ const BengiEczane = ({ medicinesData }) => {
         setNewMedicine({ ...newMedicine, [name]: value });
     };
 
+    const handleCustomerInputChange = (event) => {
+        const { name, value } = event.target;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (name === 'email' && !emailRegex.test(value)) {
+            console.error("Geçersiz e-posta adresi formatı");
+            return;
+        }
+        setCustomerMail({ ...customerMail, [name]: value });
+    }
+
+    const handleCancelMail = () => {
+        setIsCustomerModalVisible(false)
+    }
+
     const addToCart = (selectedMedicine) => {
         if(cart.length === 0){
             setCart([selectedMedicine])
         } else {
-            setCart([ ...cart, selectedMedicine])
+            const existingMedicine = cart.find(medicine => medicine.ilaçAdı === selectedMedicine.ilaçAdı);
+            if(existingMedicine){
+                openExistingNotification('top');
+            } else {
+                setCart([ ...cart, selectedMedicine])
+            }
         }
     }
 
     const onSearch = (value) => {
-        const filteredMedicines = medicines.filter(medicine => 
-            medicine.ilaçAdı.toLowerCase().includes(value.toLowerCase())
-        );
-        console.log(filteredMedicines);
+        if(value === ""){
+            setMedicines(medicinesData);
+        } else {
+            const filteredMedicines = medicines.filter(medicine => 
+                medicine.ilaçAdı.toLowerCase().includes(value.toLowerCase())
+            );
+            setMedicines(filteredMedicines);
+        }
+    }
+
+    const sepetiOnayla = () => {
+        if(cart.length === 0){
+            openEmptyNotification('top');
+        } else{
+            showModalMail();
+            openMailNotification('top');
+            console.log(customerMail);
+        }
     }
 
     const columns = [
@@ -95,6 +159,7 @@ const BengiEczane = ({ medicinesData }) => {
                 { text: 'Vitamin', value: 'Vitamin' },
                 { text: 'Bebek Bezi', value: 'Bebek Bezi' },
             ],
+            onFilter: (value, record) => record.ilaçTürü.includes(value),
         },
         {
             title: 'Fiyat',
@@ -110,8 +175,8 @@ const BengiEczane = ({ medicinesData }) => {
         {
             title: 'İşlemler',
             key: 'action',
-            render: (_, record) => (
-                <Button onClick={() => addToCart(record)}>
+            render: (_, medicine) => (
+                <Button onClick={() => addToCart(medicine)}>
                     Sepete Ekle
                 </Button>
             ),
@@ -120,7 +185,9 @@ const BengiEczane = ({ medicinesData }) => {
 
     return (
         <div>
-            
+            {existingContextHolder}
+            {mailContextHolder}
+            {emptyContextHolder}            
             <Layout>
                 <div style={{ padding: '0 48px' }}>
                     <Layout>
@@ -135,6 +202,9 @@ const BengiEczane = ({ medicinesData }) => {
                                 Yeni İlaç Ekle
                             </Button>
                             <Search placeholder="ilaç adı girin" onSearch={onSearch} enterButton />
+                            <Button type="primary" onClick={showModalMail} style={{ width: '100%', marginTop: '16px' }}>
+                                Sepeti Onayla
+                            </Button>
                         </div>
                     </Sider>
                     <Content>
@@ -146,52 +216,20 @@ const BengiEczane = ({ medicinesData }) => {
                     Ant Design ©{new Date().getFullYear()} Created by Ant UED
                 </Footer>
             </Layout>
-
-            <Modal
-                title="Yeni İlaç Ekle"
-                visible={isModalVisible}
+            <MedicineModal
+                isVisible={isModalVisible}
                 onOk={handleOk}
                 onCancel={handleCancel}
-                okText="Ekle"
-                cancelText="İptal"
-            >
-                <Form layout="vertical">
-                    <Form.Item label="İlaç Adı">
-                        <Input
-                            name="ilaçAdı"
-                            value={newMedicine.ilaçAdı}
-                            onChange={handleNewMedicineInputChange}
-                            placeholder="İlaç adını girin ör: Vermidon"
-                        />
-                    </Form.Item>
-                    <Form.Item label="Kategori">
-                        <Input
-                            name="ilaçTürü"
-                            value={newMedicine.ilaçTürü}
-                            onChange={handleNewMedicineInputChange}
-                            placeholder="Kategori girin ör: Ağrı Kesici"
-                        />
-                    </Form.Item>
-                    <Form.Item label="Fiyat">
-                        <Input
-                            name="fiyatı"
-                            value={newMedicine.fiyatı}
-                            onChange={handleNewMedicineInputChange}
-                            placeholder="Fiyat girin ör: 10"
-                            type="number"
-                        />
-                    </Form.Item>
-                    <Form.Item label="Miktar">
-                        <Input
-                            name="stokBilgisi"
-                            value={newMedicine.stokBilgisi}
-                            onChange={handleNewMedicineInputChange}
-                            placeholder="Miktarı girin ör: 100"
-                            type="number"
-                        />
-                    </Form.Item>
-                </Form>
-            </Modal>
+                newMedicine={newMedicine}
+                handleInputChange={handleNewMedicineInputChange}
+            />
+            <CustomerMailAddress
+                isVisible={isCustomerModalVisible}
+                onOk={sepetiOnayla}
+                onCancel={handleCancelMail}
+                newCustomer={customerMail}
+                handleInputChange={handleCustomerInputChange}
+            />
         </div>
     );
 };
