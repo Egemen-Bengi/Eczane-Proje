@@ -1,7 +1,5 @@
-import React, {useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import BengiEczane from "./BengiEczane";
-
-const API_URL = "https://v1.nocodeapi.com/bengi/google_sheets/CNbzVtWjswSphVic";
 
 const Get = async () => {
     var myHeaders = new Headers();

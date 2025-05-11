@@ -12,7 +12,17 @@ const CustomerMailAddress = ({ isVisible, onOk, onCancel, newCustomer, handleInp
             cancelText="İptal"
         >
             <Form layout="vertical">
-                <Form.Item label="Mail adresi">
+                <Form.Item label="Mail adresi"
+                    rules={[
+                        {
+                            required: true,
+                            message: 'Mail adresi zorunludur',
+                        },
+                        {
+                            type: 'email',
+                            message: 'Geçerli bir mail adresi girin',
+                        },
+                    ]}>
                     <Input
                         name='mailAdresi'
                         value={newCustomer.mailAdresi}

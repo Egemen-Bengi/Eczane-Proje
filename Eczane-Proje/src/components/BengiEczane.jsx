@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Layout, theme, Image, notification  } from 'antd';
+import { Table, Button, Input, Layout, theme, Image, notification } from 'antd';
 import './Eczane.css';
 import logo from '../assets/logo.png';
 import MedicineModal from './NewMedicineModal';
@@ -12,12 +12,13 @@ const BengiEczane = ({ medicinesData }) => {
     const [newMedicine, setNewMedicine] = useState({ ilaçAdı: '', ilaçTürü: '', fiyatı: '', stokBilgisi: '' });
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isCustomerModalVisible, setIsCustomerModalVisible] = useState(false);
+    var isOkey = false;
     const { Search } = Input;
     const {
-      } = theme.useToken();
+    } = theme.useToken();
     const { Content, Footer, Sider } = Layout;
-    const [mail, mailContextHolder] = notification.useNotification(); 
-    const [empty, emptyContextHolder] = notification.useNotification(); 
+    const [mail, mailContextHolder] = notification.useNotification();
+    const [empty, emptyContextHolder] = notification.useNotification();
     const [existing, existingContextHolder] = notification.useNotification();
     const openMailNotification = (placement) => {
         mail.info({
@@ -53,29 +54,33 @@ const BengiEczane = ({ medicinesData }) => {
     }
 
     const handleOk = async () => {
-        const POST = () => {
-            var myHeaders = new Headers();
+        const POST = async () => {
+            const myHeaders = new Headers();
             myHeaders.append("Content-Type", "application/json");
-            var requestOptions = {
-                method: "post",
+
+            const requestOptions = {
+                method: "POST",
                 headers: myHeaders,
                 redirect: "follow",
                 body: JSON.stringify([[newMedicine.ilaçAdı, newMedicine.ilaçTürü, newMedicine.fiyatı, newMedicine.stokBilgisi]]),
             };
 
-            fetch("https://v1.nocodeapi.com/bengi/google_sheets/CNbzVtWjswSphVic?tabId=Sayfa1", requestOptions)
-                .then(response => response.json())
-                .then(result => {
-                    return result;
-                })
-                .catch(error => {
-                    throw error;
-                });
-        }
+            try {
+                const response = await fetch("https://v1.nocodeapi.com/bengi/google_sheets/CNbzVtWjswSphVic?tabId=Sayfa1", requestOptions);
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error("POST error:", error);
+                throw error;
+            }
+        };
 
-        //POST();
-        setMedicines([...medicines, newMedicine]);
-        setNewMedicine({ilaçAdı: '', ilaçTürü: '', fiyatı: '', stokBilgisi: ''});
+        await POST();
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+
+        setNewMedicine({ ilaçAdı: '', ilaçTürü: '', fiyatı: '', stokBilgisi: '' });
         setIsModalVisible(false);
     };
 
@@ -95,7 +100,6 @@ const BengiEczane = ({ medicinesData }) => {
 
     const handleCustomerInputChange = (event) => {
         const { name, value } = event.target;
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         if (name === 'email' && !emailRegex.test(value)) {
             console.error("Geçersiz e-posta adresi formatı");
@@ -109,37 +113,90 @@ const BengiEczane = ({ medicinesData }) => {
     }
 
     const addToCart = (selectedMedicine) => {
-        if(cart.length === 0){
+        if (cart.length === 0) {
             setCart([selectedMedicine])
         } else {
             const existingMedicine = cart.find(medicine => medicine.ilaçAdı === selectedMedicine.ilaçAdı);
-            if(existingMedicine){
+            if (existingMedicine) {
                 openExistingNotification('top');
             } else {
-                setCart([ ...cart, selectedMedicine])
+                setCart([...cart, selectedMedicine])
             }
         }
     }
 
     const onSearch = (value) => {
-        if(value === ""){
+        if (value === "") {
             setMedicines(medicinesData);
         } else {
-            const filteredMedicines = medicines.filter(medicine => 
+            const filteredMedicines = medicines.filter(medicine =>
                 medicine.ilaçAdı.toLowerCase().includes(value.toLowerCase())
             );
             setMedicines(filteredMedicines);
         }
     }
 
-    const sepetiOnayla = () => {
-        if(cart.length === 0){
-            openEmptyNotification('top');
-        } else{
-            showModalMail();
+    const customerHandleOk = () => {
+        updateMedicine();
+        setCart([]);
+        setCustomerMail({ mailAdresi: '' });
+        setIsCustomerModalVisible(false);
+        if (isOkey) {
             openMailNotification('top');
-            console.log(customerMail);
         }
+    }
+
+    const sepetiOnayla = () => {
+        console.log(cart.length);
+        if (cart.length === 0) {
+            openEmptyNotification('top');
+            return;
+        }
+        showModalMail();
+    }
+
+    const updateMedicine = () => {
+        const updatePromises = cart.map(medicine => {
+            if (Number(medicine.stokBilgisi) !== 0 && medicine.row_id > 1) {
+                isOkey = true
+                var myHeaders = new Headers();
+                myHeaders.append("Content-Type", "application/json");
+                var requestOptions = {
+                    method: "put",
+                    headers: myHeaders,
+                    redirect: "follow",
+                    body: JSON.stringify({
+                        "row_id": medicine.row_id,
+                        "stokBilgisi": medicine.stokBilgisi - 1,
+                    })
+                };
+
+                return fetch("https://v1.nocodeapi.com/bengi/google_sheets/CNbzVtWjswSphVic?tabId=Sayfa1", requestOptions)
+                    .then(response => response.json())
+                    .then(result => {
+                        setMedicines(prev =>
+                            prev.map(item =>
+                                item.row_id === medicine.row_id
+                                    ? { ...item, stokBilgisi: item.stokBilgisi - 1 }
+                                    : item
+                            )
+                        );
+                        console.log("Durum güncellendi:", result);
+                    })
+                    .catch(error => {
+                        console.error("Güncelleme hatası:", error);
+                    });
+            } else {
+                alert(`${medicine.ilaçAdı} isimli ilacın stok bilgisi 0'dır.`);
+                isOkey = false;
+                setIsCustomerModalVisible(false);
+                return Promise.resolve();
+            }
+        });
+
+        Promise.all(updatePromises).then(() => {
+            console.log("Tüm güncellemeler tamamlandı.");
+        });
     }
 
     const columns = [
@@ -159,7 +216,7 @@ const BengiEczane = ({ medicinesData }) => {
                 { text: 'Vitamin', value: 'Vitamin' },
                 { text: 'Bebek Bezi', value: 'Bebek Bezi' },
             ],
-            onFilter: (value, record) => record.ilaçTürü.includes(value),
+            onFilter: (value, record) => record.ilaçTürü.includes(value.toLowerCase()),
         },
         {
             title: 'Fiyat',
@@ -187,29 +244,29 @@ const BengiEczane = ({ medicinesData }) => {
         <div>
             {existingContextHolder}
             {mailContextHolder}
-            {emptyContextHolder}            
+            {emptyContextHolder}
             <Layout>
                 <div style={{ padding: '0 48px' }}>
                     <Layout>
-                    <Sider>
-                        <Image
-                            width={100}
-                            src={logo}
-                            alt='logo'
-                        />
-                        <div style={{ padding: '16px', textAlign: 'center' }}>
-                            <Button type="primary" onClick={showModal} style={{ width: '100%', marginBottom: '16px' }}>
-                                Yeni İlaç Ekle
-                            </Button>
-                            <Search placeholder="ilaç adı girin" onSearch={onSearch} enterButton />
-                            <Button type="primary" onClick={showModalMail} style={{ width: '100%', marginTop: '16px' }}>
-                                Sepeti Onayla
-                            </Button>
-                        </div>
-                    </Sider>
-                    <Content>
-                        <Table columns={columns} dataSource={medicines} rowKey="row_id" />
-                    </Content>
+                        <Sider>
+                            <Image
+                                width={100}
+                                src={logo}
+                                alt='logo'
+                            />
+                            <div style={{ padding: '16px', textAlign: 'center' }}>
+                                <Button type="primary" onClick={showModal} style={{ width: '100%', marginBottom: '16px' }}>
+                                    Yeni İlaç Ekle
+                                </Button>
+                                <Search placeholder="ilaç adı girin" onSearch={onSearch} enterButton />
+                                <Button type="primary" onClick={sepetiOnayla} style={{ width: '100%', marginTop: '16px' }}>
+                                    Sepeti Onayla
+                                </Button>
+                            </div>
+                        </Sider>
+                        <Content>
+                            <Table columns={columns} dataSource={medicines} rowKey="row_id" />
+                        </Content>
                     </Layout>
                 </div>
                 <Footer>
@@ -225,7 +282,7 @@ const BengiEczane = ({ medicinesData }) => {
             />
             <CustomerMailAddress
                 isVisible={isCustomerModalVisible}
-                onOk={sepetiOnayla}
+                onOk={customerHandleOk}
                 onCancel={handleCancelMail}
                 newCustomer={customerMail}
                 handleInputChange={handleCustomerInputChange}
