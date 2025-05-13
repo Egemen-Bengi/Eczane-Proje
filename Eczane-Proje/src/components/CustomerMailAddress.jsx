@@ -1,18 +1,34 @@
-import React from 'react';
-import { Modal, Form, Input } from 'antd';
+import { Form, Input, Modal } from 'antd';
 
 const CustomerMailAddress = ({ isVisible, onOk, onCancel, newCustomer, handleInputChange }) => {
+    const [form] = Form.useForm();
+
+    const handleOk = () => {
+        form
+            .validateFields()
+            .then((values) => {
+                console.log('Geçerli:', values);
+                onOk(values);
+                form.resetFields();
+            })
+            .catch((errorInfo) => {
+                console.log('Validasyon hatası:', errorInfo);
+            });
+    };
+
     return (
         <Modal
-            title="Yeni İlaç Ekle"
+            title="Satış Raporu"
             visible={isVisible}
-            onOk={onOk}
+            onOk={handleOk}
             onCancel={onCancel}
-            okText="Ekle"
+            okText="Satış raporu oluştur"
             cancelText="İptal"
         >
-            <Form layout="vertical">
-                <Form.Item label="Mail adresi"
+            <Form form={form} layout="vertical" name="mailForm">
+                <Form.Item
+                    label="Mail adresi"
+                    name="mailAdresi"
                     rules={[
                         {
                             required: true,
@@ -22,17 +38,18 @@ const CustomerMailAddress = ({ isVisible, onOk, onCancel, newCustomer, handleInp
                             type: 'email',
                             message: 'Geçerli bir mail adresi girin',
                         },
-                    ]}>
-                    <Input
+                    ]}
+                >
+                    <Input 
                         name='mailAdresi'
+                        placeholder="ör: ilac@gmail.com"
                         value={newCustomer.mailAdresi}
                         onChange={handleInputChange}
-                        placeholder="Mail adresini girin ör: ilaç@gmail.com"
-                    />
+                        />
                 </Form.Item>
             </Form>
         </Modal>
-    )
-}
+    );
+};
 
 export default CustomerMailAddress;

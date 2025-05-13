@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Table, Button, Input, Layout, theme, Image, notification } from 'antd';
 import './Eczane.css';
 import logo from '../assets/logo.png';
 import MedicineModal from './NewMedicineModal';
 import CustomerMailAddress from './CustomerMailAddress';
+import ReportModal from './reportModal';
 
 const BengiEczane = ({ medicinesData }) => {
     const [medicines, setMedicines] = useState([]);
@@ -12,6 +13,7 @@ const BengiEczane = ({ medicinesData }) => {
     const [newMedicine, setNewMedicine] = useState({ ilaçAdı: '', ilaçTürü: '', fiyatı: '', stokBilgisi: '' });
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isCustomerModalVisible, setIsCustomerModalVisible] = useState(false);
+    const [isReportModalVisible, setIsReportModalVisible] = useState(false);
     var isOkey = false;
     const { Search } = Input;
     const {
@@ -75,7 +77,7 @@ const BengiEczane = ({ medicinesData }) => {
             }
         };
 
-        await POST();
+        //await POST();
         setTimeout(() => {
             window.location.reload();
         }, 1000);
@@ -100,11 +102,6 @@ const BengiEczane = ({ medicinesData }) => {
 
     const handleCustomerInputChange = (event) => {
         const { name, value } = event.target;
-
-        if (name === 'email' && !emailRegex.test(value)) {
-            console.error("Geçersiz e-posta adresi formatı");
-            return;
-        }
         setCustomerMail({ ...customerMail, [name]: value });
     }
 
@@ -137,13 +134,12 @@ const BengiEczane = ({ medicinesData }) => {
     }
 
     const customerHandleOk = () => {
-        updateMedicine();
-        setCart([]);
-        setCustomerMail({ mailAdresi: '' });
+        //updateMedicine();
         setIsCustomerModalVisible(false);
         if (isOkey) {
             openMailNotification('top');
         }
+        salesReport();
     }
 
     const sepetiOnayla = () => {
@@ -199,6 +195,12 @@ const BengiEczane = ({ medicinesData }) => {
         });
     }
 
+    const salesReport = () => {
+        setIsReportModalVisible(true);
+    }
+
+    const allMedicineCategories = [...new Set(medicines.map(medicin => medicin.ilaçTürü))].filter(Boolean);
+
     const columns = [
         {
             title: 'İlaç Adı',
@@ -209,14 +211,11 @@ const BengiEczane = ({ medicinesData }) => {
             title: 'Kategori',
             dataIndex: 'ilaçTürü',
             key: 'ilaçTürü',
-            filters: [
-                { text: 'Ağrı Kesici', value: 'Ağrı Kesici' },
-                { text: 'Antibiyotik', value: 'Antibiyotik' },
-                { text: 'Soğuk Algınlığı', value: 'Soğuk Algınlığı' },
-                { text: 'Vitamin', value: 'Vitamin' },
-                { text: 'Bebek Bezi', value: 'Bebek Bezi' },
-            ],
-            onFilter: (value, record) => record.ilaçTürü.includes(value.toLowerCase()),
+            filters: allMedicineCategories.map(category => ({
+                text: category,
+                value: category,
+            })),
+            onFilter: (value, record) => record.ilaçTürü.toLowerCase().includes(value.toLowerCase()),
         },
         {
             title: 'Fiyat',
@@ -286,6 +285,13 @@ const BengiEczane = ({ medicinesData }) => {
                 onCancel={handleCancelMail}
                 newCustomer={customerMail}
                 handleInputChange={handleCustomerInputChange}
+            />
+            <ReportModal
+                isModalOpen={isReportModalVisible}
+                handleOk={() => setIsReportModalVisible(false)}
+                handleCancel={() => setIsReportModalVisible(false)}
+                mail={customerMail.mailAdresi}
+                medicines={cart}
             />
         </div>
     );
