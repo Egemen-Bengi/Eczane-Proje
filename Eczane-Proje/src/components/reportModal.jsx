@@ -1,7 +1,7 @@
 import './reportModal.css';
 import { Modal } from 'antd';
 
-const ReportModal = ({ isModalOpen, handleOk, mail, medicines }) => {
+const ReportModal = ({ isModalOpen, handleOk, mail, medicines, onCancel }) => {
     const sonToplam = medicines.reduce((toplam, element) => toplam + Number(element.fiyatı), 0);
 
     return (
@@ -9,6 +9,8 @@ const ReportModal = ({ isModalOpen, handleOk, mail, medicines }) => {
             title="Satış Raporu"
             open={isModalOpen}
             onOk={handleOk}
+            onCancel={onCancel}
+            cancelText="İptal"
         >
             <div className="report-modal-content">
                 <p><strong>Mail:</strong> {mail}</p>

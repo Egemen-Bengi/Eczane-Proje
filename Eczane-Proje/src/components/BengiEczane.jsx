@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Input, Layout, theme, Image, notification } from 'antd';
+import { Table, Button, Input, Layout, theme, Image, notification, Avatar } from 'antd';
 import './Eczane.css';
 import logo from '../assets/logo.png';
 import MedicineModal from './NewMedicineModal';
@@ -77,7 +77,7 @@ const BengiEczane = ({ medicinesData }) => {
             }
         };
 
-        //await POST();
+        await POST();
         setTimeout(() => {
             window.location.reload();
         }, 1000);
@@ -134,7 +134,7 @@ const BengiEczane = ({ medicinesData }) => {
     }
 
     const customerHandleOk = () => {
-        //updateMedicine();
+        updateMedicine();
         setIsCustomerModalVisible(false);
         if (isOkey) {
             openMailNotification('top');
@@ -199,7 +199,9 @@ const BengiEczane = ({ medicinesData }) => {
         setIsReportModalVisible(true);
     }
 
-    const allMedicineCategories = [...new Set(medicines.map(medicin => medicin.ilaçTürü))].filter(Boolean);
+    const allMedicineCategories = [...new Set(
+        medicines.map(medicin => medicin.ilaçTürü)
+    )].filter(Boolean);
 
     const columns = [
         {
@@ -215,7 +217,9 @@ const BengiEczane = ({ medicinesData }) => {
                 text: category,
                 value: category,
             })),
-            onFilter: (value, record) => record.ilaçTürü.toLowerCase().includes(value.toLowerCase()),
+            onFilter: (value, record) => record.ilaçTürü.
+            toLowerCase().
+            includes(value.toLowerCase()),
         },
         {
             title: 'Fiyat',
@@ -269,7 +273,7 @@ const BengiEczane = ({ medicinesData }) => {
                     </Layout>
                 </div>
                 <Footer>
-                    Ant Design ©{new Date().getFullYear()} Created by Ant UED
+                    {<Avatar size="large" src={'walterWhite.jpg'}/>} "we need to cook"
                 </Footer>
             </Layout>
             <MedicineModal
@@ -289,7 +293,7 @@ const BengiEczane = ({ medicinesData }) => {
             <ReportModal
                 isModalOpen={isReportModalVisible}
                 handleOk={() => setIsReportModalVisible(false)}
-                handleCancel={() => setIsReportModalVisible(false)}
+                onCancel={() => setIsReportModalVisible(false)}
                 mail={customerMail.mailAdresi}
                 medicines={cart}
             />
